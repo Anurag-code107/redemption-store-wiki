@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redemption Store — Functional Overview</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fb;
+      color: #1a1a2e;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .page-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: white;
+      padding: 48px 60px 36px;
+    }
+    .page-header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-header p { margin-top: 10px; opacity: 0.95; font-size: 15px; color: #cbd5e1; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+    .badge-done { background: #22c55e; color: white; }
+    .badge-next { background: #f59e0b; color: white; }
+    .badge-phase2 { background: #6b7280; color: white; }
+    .badge-phase1 { background: #3b82f6; color: white; }
+    .header-badges { margin-top: 16px; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 40px; }
+    .toc {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 40px;
+    }
+    .toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 14px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin: 5px 0; }
+    .toc a { color: #3b82f6; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    section { margin-bottom: 56px; }
+    h2.section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f3460;
+      border-left: 4px solid #3b82f6;
+      padding-left: 14px;
+      margin-bottom: 24px;
+      padding-top: 4px;
+    }
+    h3.sub-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin: 28px 0 12px;
+    }
+    h4.mini-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 20px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    p { margin-bottom: 12px; color: #374151; }
+
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .info-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .info-card h4 { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .info-card p { font-size: 14px; color: #374151; margin: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 16px 0;
+    }
+    th {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #374151;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    code {
+      background: #f1f5f9;
+      color: #e11d48;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .diagram-wrap {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 32px 24px;
+      margin: 20px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+    .diagram-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 12px;
+      font-style: italic;
+    }
+
+    .callout {
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    .callout-blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1d4ed8; }
+    .callout-green { background: #f0fdf4; border-left: 4px solid #22c55e; color: #15803d; }
+    .callout-amber { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+
+    .persona-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .persona-chip {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .persona-chip span { display: block; font-size: 11px; font-weight: 400; color: #94a3b8; margin-top: 2px; }
+
+    .step-list { list-style: none; padding: 0; }
+    .step-list li {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      background: #3b82f6;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .feature-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .timeline-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 36px;
+    }
+    .timeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .dot-done { background: #22c55e; border-color: #22c55e; }
+    .dot-next { background: white; border-color: #f59e0b; }
+    .dot-future { background: white; border-color: #d1d5db; }
+    .timeline-connector {
+      width: 2px;
+      flex: 1;
+      background: #e2e8f0;
+      min-height: 12px;
+    }
+    .timeline-content {
+      padding-bottom: 24px;
+      flex: 1;
+    }
+    .timeline-content h4 { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .timeline-content p { font-size: 13px; color: #6b7280; margin: 0; }
+    .week-label { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 3px; }
+    .week-done { color: #16a34a; }
+    .week-next { color: #d97706; }
+    .week-future { color: #6b7280; }
+    .week-p2 { color: #7c3aed; }
+    .dot-p2 { background: #7c3aed; border-color: #7c3aed; opacity: 0.5; }
+
+    .divider { height: 1px; background: #e2e8f0; margin: 40px 0; }
+
+    @media (max-width: 768px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.three { grid-template-columns: 1fr; }
+      .container { padding: 20px; }
+      .page-header { padding: 32px 24px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Redemption Store — Functional Overview</h1>
+  <p>TenXEngage Platform · Roadmap: <strong>redemption-store</strong> · Based on Blueprint specs</p>
+  <div class="header-badges">
+    <span class="badge badge-done">F-01 Done</span>
+    <span class="badge badge-done">F-02 Done</span>
+    <span class="badge badge-next">F-03 Next</span>
+    <span class="badge badge-phase1">Phase 1 · 7 Features</span>
+    <span class="badge badge-phase2">Phase 2 · 2 Features</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#overview">Initiative Overview</a></li>
+      <li><a href="#personas">Personas</a></li>
+      <li><a href="#f01">F-01 — Wallet &amp; Ledger Foundation</a></li>
+      <li><a href="#f02">F-02 — Redemption Catalog</a></li>
+      <li><a href="#connection">How F-01 &amp; F-02 Connect</a></li>
+      <li><a href="#roadmap">Phase 1 Roadmap — What's Next</a></li>
+    </ol>
+  </div>
+
+  <!-- SECTION 1: OVERVIEW -->
+  <section id="overview">
+    <h2 class="section-title">1. Initiative Overview</h2>
+    <div class="card">
+      <p>
+        The <strong>Redemption Store</strong> initiative gives partner sellers a way to convert the reward points and credits they earn
+        through incentives, training, activities, and journeys into real-world value — cash payouts via XTRM, or
+        non-cash rewards (gift cards, vouchers) via Xoxoday.
+      </p>
+      <p>
+        Before this initiative, TenXEngage tracked reward balances as a simple number with no immutable audit trail,
+        no vendor routing, and no self-service configuration for Client Admins. The Redemption Store replaces that
+        with a full financial-grade system: dual wallets, an immutable ledger, a configurable catalog, and a
+        complete end-to-end redemption flow.
+      </p>
+      <p>
+        <strong>Vendor transparency rule:</strong> Partners never see vendor names (XTRM, Xoxoday) in any UI or API response.
+        Routing happens transparently behind the scenes based on the catalog item's category.
+      </p>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph LR
+    Partner(["👤 Partner Earns Rewards"])
+    Wallet(["💰 Wallet Balance\nBuilds Up"])
+    Catalog(["🛍️ Browses Catalog\nSees What They Can Redeem"])
+    Submit(["✅ Submits Redemption"])
+    Vendor{{"Vendor Routing"}}
+    XTRM(["💵 XTRM\nCash Payout"])
+    Xoxo(["🎁 Xoxoday\nGift Card / Voucher"])
+    Done(["✔ Fulfillment Confirmed\nBalance Finalized"])
+
+    Partner --> Wallet
+    Wallet --> Catalog
+    Catalog --> Submit
+    Submit --> Vendor
+    Vendor -->|CASH item| XTRM
+    Vendor -->|NON_CASH item| Xoxo
+    XTRM --> Done
+    Xoxo --> Done
+
+    style Partner fill:#dbeafe,stroke:#3b82f6
+    style Wallet fill:#dcfce7,stroke:#22c55e
+    style Catalog fill:#fef9c3,stroke:#f59e0b
+    style Submit fill:#f3e8ff,stroke:#a855f7
+    style Vendor fill:#f1f5f9,stroke:#64748b
+    style XTRM fill:#d1fae5,stroke:#10b981
+    style Xoxo fill:#ffedd5,stroke:#f97316
+    style Done fill:#dcfce7,stroke:#22c55e
+      </div>
+      <div class="diagram-label">Figure 1 — End-to-end partner redemption journey</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 2: PERSONAS -->
+  <section id="personas">
+    <h2 class="section-title">2. Personas</h2>
+    <div class="card">
+      <p>Four roles interact with the Redemption Store. Each has a distinct surface area.</p>
+      <div class="persona-row">
+        <div class="persona-chip">
+          TenXEngage Platform Admin (TENX_ADMIN)
+          <span>Creates &amp; maintains global catalog items. Manages vendor integrations. No tenant context.</span>
+        </div>
+        <div class="persona-chip">
+          CLIENT_ADMIN
+          <span>Configures which catalog items are available to their partners, at what thresholds and in which regions.</span>
+        </div>
+        <div class="persona-chip">
+          PARTNER_SELLER
+          <span>Earns rewards, browses catalog, submits personal wallet redemptions.</span>
+        </div>
+        <div class="persona-chip">
+          PARTNER_ADMIN
+          <span>Same as PARTNER_SELLER + can redeem from the pooled company wallet.</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Persona</th>
+            <th>F-01 Wallet</th>
+            <th>F-02 Catalog</th>
+            <th>F-03+ Redemption</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>TENX_ADMIN</code></td><td>—</td><td>Create / manage global items, sync Xoxoday</td><td>View integration health</td></tr>
+          <tr><td><code>CLIENT_ADMIN</code></td><td>View any user / company wallet in tenant</td><td>Enable items, set overrides, configure regions &amp; batch cadence</td><td>Approve APPROVAL_REQUIRED redemptions (F-04)</td></tr>
+          <tr><td><code>PARTNER_ADMIN</code></td><td>Own wallets + company wallet</td><td>Browse catalog</td><td>Submit personal + company wallet redemptions</td></tr>
+          <tr><td><code>PARTNER_SELLER</code></td><td>Own individual wallets</td><td>Browse catalog</td><td>Submit personal wallet redemptions</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 3: F-01 -->
+  <section id="f01">
+    <h2 class="section-title">3. F-01 — Wallet &amp; Ledger Foundation <span class="badge badge-done" style="font-size:11px;vertical-align:middle;">Done</span></h2>
+
+    <div class="callout callout-green">
+      <strong>What this delivered:</strong> Every partner now has a real financial wallet. Every balance movement is recorded as an
+      immutable ledger entry. The nav bar shows the partner's live available balance on every page.
+    </div>
+
+    <h3 class="sub-title">3.1 Dual Wallet Model</h3>
+    <div class="card">
+      <p>
+        The old <code>reward_balances</code> table was a simple accumulator — a single number per user per currency.
+        It was renamed to <code>reward_wallets</code> and extended with two concepts:
+      </p>
+      <div class="card-grid">
+        <div class="info-card">
+          <h4>Individual Wallet</h4>
+          <p>One per <code>PARTNER_SELLER</code> per currency. Earns from personal incentives, training, activities, journeys, deals.</p>
+        </div>
+        <div class="info-card">
+          <h4>Company Wallet</h4>
+          <p>One per <code>partner_company</code> per currency. Pooled across all sellers in the company. Accessible by <code>PARTNER_ADMIN</code> only.</p>
+        </div>
+      </div>
+      <p>Each wallet tracks two balance fields:</p>
+      <div class="card-grid">
+        <div class="info-card">
+          <h4>availableBalance</h4>
+          <p>The amount the partner can actually spend today. Only this balance is shown in the nav widget and the catalog.</p>
+        </div>
+        <div class="info-card">
+          <h4>reservedBalance</h4>
+          <p>Amount locked against a pending redemption (submitted but not yet fulfilled). Partner cannot spend this.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+erDiagram
+    REWARD_WALLET {
+        UUID id PK
+        VARCHAR wallet_type "INDIVIDUAL or COMPANY"
+        UUID user_id "FK users (INDIVIDUAL only)"
+        UUID partner_company_id "FK partner_companies (COMPANY only)"
+        VARCHAR currency_id "cash / points / credits / tickets"
+        DECIMAL available_balance "Spendable"
+        DECIMAL reserved_balance "Locked in-flight"
+        BIGINT version "Optimistic lock"
+    }
+
+    LEDGER_ENTRY {
+        UUID id PK
+        UUID reward_wallet_id FK
+        VARCHAR entry_type "CREDIT RESERVE DEBIT RELEASE RETURN_CREDIT"
+        DECIMAL amount "Always positive"
+        VARCHAR reference_type "INCENTIVE TRAINING ACTIVITY etc"
+        UUID reference_id
+        DECIMAL available_balance_before
+        DECIMAL available_balance_after
+        DECIMAL reserved_balance_before
+        DECIMAL reserved_balance_after
+    }
+
+    REWARD_WALLET ||--o{ LEDGER_ENTRY : "has many"
+      </div>
+      <div class="diagram-label">Figure 2 — Wallet &amp; Ledger entity model</div>
+    </div>
+
+    <h3 class="sub-title">3.2 Balance Lifecycle</h3>
+    <div class="card">
+      <p>
+        Balances never change directly. Every change goes through <code>WalletService</code>, which writes a
+        <code>LedgerEntry</code> record first, then updates the wallet totals — all in one database transaction.
+        This makes the ledger the authoritative audit trail.
+      </p>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+stateDiagram-v2
+    [*] --> Available : CREDIT\n(earning event)
+
+    Available --> Reserved : RESERVE\n(redemption submitted)\navailableBalance ↓\nreservedBalance ↑
+
+    Reserved --> Debited : DEBIT\n(vendor confirms fulfillment)\nreservedBalance ↓\ntotal wallet value reduced
+
+    Reserved --> Available : RELEASE\n(redemption failed or cancelled)\nreservedBalance ↓\navailableBalance restored ↑
+
+    Available --> Available : RETURN_CREDIT\n(non-cash return approved — F-06)\navailableBalance ↑
+
+    note right of Available
+      Only availableBalance
+      is shown to partners
+      and checked against
+      catalog minimums
+    end note
+      </div>
+      <div class="diagram-label">Figure 3 — Balance state transitions (all driven by LedgerEntry writes)</div>
+    </div>
+
+    <h3 class="sub-title">3.3 Earning Integration</h3>
+    <div class="card">
+      <p>
+        The existing <code>RewardGrantService</code> — which handles all earning sources — was updated to route
+        every credit through <code>WalletService.credit()</code>. It does not bypass the ledger.
+      </p>
+      <p>
+        <strong>Idempotency:</strong> If the same earning event is delivered twice (e.g., a retry), the second credit is
+        silently skipped. The unique index on <code>(wallet_id, reference_type, reference_id)</code> prevents any
+        double-crediting.
+      </p>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    subgraph Sources["Earning Sources"]
+        I["🏆 Incentive"]
+        T["📚 Training"]
+        A["⚡ Activity"]
+        J["🗺️ Journey"]
+        D["🤝 Deal"]
+    end
+
+    RGS["RewardGrantService\n(modified)"]
+    WS["WalletService.credit()\n• auto-creates wallet if needed\n• idempotency check\n• optimistic lock retry ×3"]
+
+    subgraph DB["Database (atomic transaction)"]
+        LE["LedgerEntry\n(CREDIT — immutable)"]
+        RW["RewardWallet\navailableBalance ↑"]
+    end
+
+    I --> RGS
+    T --> RGS
+    A --> RGS
+    J --> RGS
+    D --> RGS
+    RGS --> WS
+    WS --> LE
+    WS --> RW
+    LE -. "written first" .-> RW
+
+    style Sources fill:#dbeafe,stroke:#3b82f6
+    style DB fill:#dcfce7,stroke:#22c55e
+    style WS fill:#f3e8ff,stroke:#a855f7
+      </div>
+      <div class="diagram-label">Figure 4 — Earning sources → WalletService → Ledger + Wallet (atomic)</div>
+    </div>
+
+    <h3 class="sub-title">3.4 Key Business Rules</h3>
+    <div class="card">
+      <table>
+        <thead><tr><th>Rule</th><th>What Happens</th></tr></thead>
+        <tbody>
+          <tr><td><code>availableBalance</code> can never go negative</td><td>Any operation that would cause this is rejected with HTTP 400 before any write</td></tr>
+          <tr><td>Wallet auto-created on first credit</td><td><code>WalletService</code> uses a pessimistic lock on first-create to handle concurrent race conditions</td></tr>
+          <tr><td>Duplicate earning event detected</td><td>HTTP 200 returned, current balance unchanged, second ledger entry NOT written</td></tr>
+          <tr><td>Optimistic lock conflict on concurrent credits</td><td>Retried up to 3× with exponential backoff; after 3 failures → HTTP 500</td></tr>
+          <tr><td>PARTNER_ADMIN accessing another company's wallet</td><td>JWT claim validated server-side → HTTP 403</td></tr>
+          <tr><td>Ledger entries are immutable</td><td>No UPDATE or DELETE permitted on <code>ledger_entries</code>; retained 7 years minimum</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">3.5 Nav Balance Widget</h3>
+    <div class="card">
+      <p>
+        A <code>RewardBalanceWidget</code> component was added to <code>AppLayout</code> — visible on every
+        authenticated page for users with the <code>module.redemption_store</code> permission.
+      </p>
+      <ul style="padding-left:20px; color:#374151; font-size:14px;">
+        <li style="margin-bottom:6px;">Shows <strong>available balance only</strong> (not reserved)</li>
+        <li style="margin-bottom:6px;">For multi-currency holders: primary currency shown, tooltip expands all</li>
+        <li style="margin-bottom:6px;">Zero-balance currencies collapsed by default</li>
+        <li style="margin-bottom:6px;">Clicking the widget navigates to <code>/redemption-store</code></li>
+        <li style="margin-bottom:6px;">Refreshes every 2 minutes (TanStack Query stale time)</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-title">3.6 API Endpoints</h3>
+    <div class="card">
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Who</th><th>Returns</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/api/v1/wallets/me</code></td><td>Any authenticated user</td><td>Own individual wallet balances (all currencies)</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/wallets/company/{companyId}</code></td><td>PARTNER_ADMIN (own company), CLIENT_ADMIN (any)</td><td>Company wallet balances</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/wallets/users/{userId}</code></td><td>CLIENT_ADMIN only</td><td>Any user's wallet balances within tenant</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 4: F-02 -->
+  <section id="f02">
+    <h2 class="section-title">4. F-02 — Redemption Catalog <span class="badge badge-done" style="font-size:11px;vertical-align:middle;">Done</span></h2>
+
+    <div class="callout callout-green">
+      <strong>What this delivered:</strong> A three-tier catalog system. Platform Admin defines what exists globally.
+      Client Admin decides what their partners can see, at what minimums, in which modes, and in which regions.
+      Partners browse a filtered, currency-aware catalog with shortfall indicators.
+    </div>
+
+    <h3 class="sub-title">4.1 The Three-Layer Model</h3>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    subgraph P["Layer 1 — Platform Admin (TENX_ADMIN)"]
+        GCI["RedemptionCatalogItem\n• Name, description\n• Category: CASH or NON_CASH\n• Currency, min amount, processing mode\n• Geographic scope (ISO codes)\n• Provider item ID (Xoxoday / XTRM)\n• isReturnable, returnWindowDays\n• isActive flag"]
+    end
+
+    subgraph C["Layer 2 — Client Admin (per tenant)"]
+        TRS["TenantRedemptionSettings\n• batchCadence: DAILY or WEEKLY"]
+        CCIC["ClientCatalogItemConfig (per item)\n• enabled on/off\n• processingMode override\n• minTransactionAmount override\n• minWalletBalance override\n• returnWindowDays override"]
+        CCRC["ClientCatalogRegionConfig (per item per region)\n• enabled on/off\n• Must be subset of item geographicScope"]
+    end
+
+    subgraph Part["Layer 3 — Partner Browse View"]
+        Browse["CatalogBrowseItemResponse\n• Effective values (COALESCE overrides + defaults)\n• canAfford, shortfallAmount\n• estimatedPayoutTimeline\n• Vendor fields HIDDEN"]
+    end
+
+    P --> C
+    C --> Part
+
+    style P fill:#dbeafe,stroke:#3b82f6
+    style C fill:#fef9c3,stroke:#f59e0b
+    style Part fill:#dcfce7,stroke:#22c55e
+      </div>
+      <div class="diagram-label">Figure 5 — Three-layer catalog model</div>
+    </div>
+
+    <h3 class="sub-title">4.2 Platform Admin — Global Catalog</h3>
+    <div class="card">
+      <p>
+        <code>RedemptionCatalogItem</code> is a <strong>platform-level entity with no <code>client_id</code></strong> — it is
+        not tenant-scoped. This is analogous to how feature flags work. TENX_ADMIN creates items globally;
+        any Client Admin can then enable them for their tenant.
+      </p>
+      <div class="card-grid">
+        <div class="info-card">
+          <h4>CASH items</h4>
+          <p>Routed to XTRM. Always amount-based. Cannot be returnable. Vendor name never shown.</p>
+        </div>
+        <div class="info-card">
+          <h4>NON_CASH items</h4>
+          <p>Routed to Xoxoday. Gift cards, vouchers, etc. May be returnable. Provider item ID required before activation.</p>
+        </div>
+      </div>
+      <p style="margin-top:12px;">
+        A <strong>background sync job</strong> (<code>XoxodaySyncJobService</code>) periodically pulls Xoxoday's catalog.
+        Items that Xoxoday removes are automatically deactivated (<code>isActive = false</code>), immediately hiding
+        them from all tenants.
+      </p>
+    </div>
+
+    <h3 class="sub-title">4.3 Client Admin — Tenant Configuration</h3>
+    <div class="card">
+      <p>
+        Client Admin never touches the global item. They create a <code>ClientCatalogItemConfig</code> row
+        (one per item per tenant) to control what their partners see.
+      </p>
+      <table>
+        <thead><tr><th>Override Field</th><th>What It Does</th><th>Constraint</th></tr></thead>
+        <tbody>
+          <tr><td><code>enabled</code></td><td>Show or hide this item for all partners in this tenant</td><td>Cannot enable a globally inactive item</td></tr>
+          <tr><td><code>processingModeOverride</code></td><td>Change from INSTANT → BATCH or APPROVAL_REQUIRED</td><td>null = inherit global default</td></tr>
+          <tr><td><code>minTransactionAmountOverride</code></td><td>Raise the minimum redemption amount</td><td>Cannot be set BELOW the platform global minimum</td></tr>
+          <tr><td><code>minWalletBalanceOverride</code></td><td>Partner must have at least this balance to submit</td><td>Checked at submit time (F-03), not at browse time</td></tr>
+          <tr><td><code>returnWindowDaysOverride</code></td><td>Customize return window; 0 = no returns</td><td>null = inherit global default</td></tr>
+          <tr><td><code>batchCadence</code> (settings)</td><td>DAILY or WEEKLY — governs when all BATCH items are processed</td><td>Applies to all BATCH items in the tenant</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">4.4 Regional Configuration</h3>
+    <div class="card">
+      <p>
+        For each catalog item, Client Admin can further restrict availability by region using
+        <code>ClientCatalogRegionConfig</code>. The fallback logic is a three-tier check:
+      </p>
+      <div class="diagram-wrap" style="margin:0;border:none;padding:16px 0;">
+        <div class="mermaid">
+flowchart LR
+    Q{"Does ClientCatalogRegionConfig\nexist for this\n(tenant, item, region)?"}
+    Q -->|Yes| A["Use its enabled value"]
+    Q -->|No| B{"Does ClientCatalogItemConfig\nexist for this\n(tenant, item)?"}
+    B -->|Yes| C["Use ClientCatalogItemConfig.enabled\n(applies to all regions)"]
+    B -->|No| D["Item NOT visible"]
+
+    style A fill:#dcfce7,stroke:#22c55e
+    style D fill:#fee2e2,stroke:#ef4444
+        </div>
+      </div>
+      <p style="margin-top:12px;">
+        <strong>Hard constraint:</strong> A Client Admin cannot enable an item for a region that is NOT in the
+        item's <code>geographicScope</code> (set by Platform Admin). Attempting this returns HTTP 422.
+      </p>
+    </div>
+
+    <h3 class="sub-title">4.5 Processing Modes</h3>
+    <div class="card">
+      <div class="card-grid three">
+        <div class="info-card">
+          <h4>INSTANT</h4>
+          <p>Sent to vendor immediately after submission (or after approval if APPROVAL_REQUIRED). DEBIT recorded on webhook confirmation.</p>
+        </div>
+        <div class="info-card">
+          <h4>BATCH</h4>
+          <p>Queued with a <code>scheduledBatchDate</code>. Processed by batch job on tenant's configured cadence (daily or weekly). Partner sees next batch date.</p>
+        </div>
+        <div class="info-card">
+          <h4>APPROVAL_REQUIRED</h4>
+          <p>Held in <code>PENDING_APPROVAL</code>. Balance stays reserved. Vendor handoff only after a CLIENT_ADMIN approves (F-04).</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">4.6 Partner Catalog Browse</h3>
+    <div class="card">
+      <p>
+        When a partner opens the Redemption Store, the catalog is assembled through this filter pipeline:
+      </p>
+      <ol class="step-list">
+        <li><span class="step-num">1</span><span>Start with all globally active items (<code>isActive = true</code>)</span></li>
+        <li><span class="step-num">2</span><span>Keep only items the Client Admin has enabled for this tenant (<code>ClientCatalogItemConfig.enabled = true</code>)</span></li>
+        <li><span class="step-num">3</span><span>Apply regional filter — three-tier fallback (see above)</span></li>
+        <li><span class="step-num">4</span><span>Keep only items whose <code>currencyId</code> matches a currency the partner holds a wallet for</span></li>
+        <li><span class="step-num">5</span><span>For each item: compute <code>canAfford</code> (available balance ≥ effective min wallet balance) and <code>shortfallAmount</code></span></li>
+        <li><span class="step-num">6</span><span>Sort: group by currency, then NON_CASH by regional relevance, CASH by min amount ascending</span></li>
+      </ol>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    Start(["Partner opens\nRedemption Store"])
+    F1["Filter: isActive = true\n(globally active items only)"]
+    F2["Filter: ClientCatalogItemConfig.enabled = true\n(tenant-enabled items only)"]
+    F3["Filter: Regional availability\n(three-tier fallback)"]
+    F4["Filter: currency matches\npartner's wallet currencies"]
+    F5["Compute per item:\ncanAfford = availableBalance ≥ minWalletBalance\nshortfallAmount = max(0, minWalletBalance - availableBalance)"]
+    F6["Sort: group by currency\nNON_CASH: regional score desc\nCASH: min amount asc"]
+    Result(["Partner sees filtered catalog\nwith shortfall indicators"])
+
+    Start --> F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> Result
+
+    style Start fill:#dbeafe,stroke:#3b82f6
+    style Result fill:#dcfce7,stroke:#22c55e
+      </div>
+      <div class="diagram-label">Figure 6 — Partner catalog browse filter pipeline</div>
+    </div>
+
+    <h3 class="sub-title">4.7 Shortfall Indicator</h3>
+    <div class="card">
+      <p>
+        Items the partner <em>cannot</em> yet afford are <strong>not hidden</strong> — they are shown with a
+        <code>ShortfallBadge</code> displaying how much more balance is needed. The "Redeem" button is disabled
+        for these items. This is intentional: it motivates partners to keep earning.
+      </p>
+      <div class="callout callout-amber">
+        <strong>Important:</strong> <code>minWalletBalance</code> (the threshold check) is NOT shown to partners.
+        It is deliberately hidden to prevent gaming. Partners only see the shortfall amount, not the raw threshold.
+      </div>
+    </div>
+
+    <h3 class="sub-title">4.8 Effective Value Resolution</h3>
+    <div class="card">
+      <p>
+        When building a catalog item's response for a partner, the platform always resolves effective values
+        using a COALESCE pattern — override takes precedence, global default is the fallback:
+      </p>
+      <table>
+        <thead><tr><th>Field</th><th>Effective Value Formula</th></tr></thead>
+        <tbody>
+          <tr><td>Processing mode</td><td><code>COALESCE(config.processingModeOverride, item.defaultProcessingMode)</code></td></tr>
+          <tr><td>Min transaction amount</td><td><code>COALESCE(config.minTransactionAmountOverride, item.defaultMinRedemptionAmount)</code></td></tr>
+          <tr><td>Min wallet balance</td><td><code>COALESCE(config.minWalletBalanceOverride, 0)</code></td></tr>
+          <tr><td>Return window days</td><td><code>COALESCE(config.returnWindowDaysOverride, item.defaultReturnWindowDays)</code></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px;">These effective values are also what F-03 (Redemption Flow) uses at submission time for validation.</p>
+    </div>
+
+    <h3 class="sub-title">4.9 API Surface Summary</h3>
+    <div class="card">
+      <table>
+        <thead><tr><th>Surface</th><th>Key Endpoints</th><th>Permission</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Platform Admin</td>
+            <td><code>POST/GET/PUT /api/v1/admin/redemption-catalog</code><br/><code>PATCH /{id}/activate|deactivate</code><br/><code>POST /sync</code> · <code>GET /integration-health</code></td>
+            <td><code>action.redemption.catalog.manage</code> (TENX_ADMIN only)</td>
+          </tr>
+          <tr>
+            <td>Client Admin config</td>
+            <td><code>GET/PUT /api/v1/redemption/settings</code><br/><code>GET /redemption/catalog/config</code><br/><code>PUT /redemption/catalog/config/{id}</code><br/><code>PUT/DELETE /redemption/catalog/config/{id}/regions/{code}</code></td>
+            <td><code>action.redemption.configure</code> (CLIENT_ADMIN only)</td>
+          </tr>
+          <tr>
+            <td>Partner browse</td>
+            <td><code>GET /api/v1/redemption/catalog</code><br/><code>GET /api/v1/redemption/catalog/{id}</code></td>
+            <td><code>module.redemption_store</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 5: CONNECTION -->
+  <section id="connection">
+    <h2 class="section-title">5. How F-01 &amp; F-02 Connect</h2>
+
+    <div class="card">
+      <p>
+        F-01 and F-02 are tightly coupled. The catalog browse service calls <code>WalletService.getMyWallets()</code>
+        directly to compute shortfall and currency filtering. Without F-01, F-02's browse has no balance data.
+      </p>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    subgraph F01["F-01 — Wallet Foundation"]
+        RW["RewardWallet\navailableBalance per currency"]
+        WS["WalletService\n.getMyWallets()"]
+        RW --> WS
+    end
+
+    subgraph F02["F-02 — Redemption Catalog"]
+        BS["RedemptionCatalogBrowseService\n.browsePartnerCatalog()"]
+        RES["CatalogBrowseItemResponse\n• canAfford\n• shortfallAmount\n• effectiveMinTransactionAmount\n• estimatedPayoutTimeline"]
+        BS --> RES
+    end
+
+    subgraph F03["F-03 — Redemption Flow (next)"]
+        RS["RedemptionService\n.submitPersonalRedemption()\n• reserve() via WalletService\n• effectiveValues from catalog"]
+    end
+
+    WS -->|"availableBalance\nper currencyId"| BS
+    RES -->|"partner selects item\ncatalogItemId + walletId"| RS
+    WS -->|"reserve / debit / release"| RS
+
+    style F01 fill:#dbeafe,stroke:#3b82f6
+    style F02 fill:#fef9c3,stroke:#f59e0b
+    style F03 fill:#f3e8ff,stroke:#a855f7
+      </div>
+      <div class="diagram-label">Figure 7 — Data flow between F-01, F-02, and upcoming F-03</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 6: ROADMAP -->
+  <section id="roadmap">
+    <h2 class="section-title">6. Roadmap — Phase 1 &amp; Phase 2</h2>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph LR
+    F01["F-01\nWallet & Ledger\n✅ Done"]
+    F02["F-02\nRedemption Catalog\n✅ Done"]
+    F03["F-03\nRedemption Flow\n⏳ Next"]
+    F04["F-04\nApproval Queue"]
+    F05["F-05\nTransaction History"]
+    F06["F-06\nNon-Cash Returns"]
+    F07["F-07\nBasic Analytics"]
+    F08["F-08\nAdvanced Analytics\n📊 Phase 2"]
+    F09["F-09\nBalance Expiration\n📊 Phase 2"]
+
+    F01 --> F02
+    F01 --> F03
+    F02 --> F03
+    F03 --> F04
+    F03 --> F05
+    F04 --> F06
+    F05 --> F06
+    F03 --> F07
+    F05 --> F07
+    F07 --> F08
+    F01 --> F09
+    F03 --> F09
+
+    style F01 fill:#dcfce7,stroke:#22c55e
+    style F02 fill:#dcfce7,stroke:#22c55e
+    style F03 fill:#fef9c3,stroke:#f59e0b
+    style F04 fill:#f1f5f9,stroke:#94a3b8
+    style F05 fill:#f1f5f9,stroke:#94a3b8
+    style F06 fill:#f1f5f9,stroke:#94a3b8
+    style F07 fill:#f1f5f9,stroke:#94a3b8
+    style F08 fill:#ede9fe,stroke:#7c3aed
+    style F09 fill:#ede9fe,stroke:#7c3aed
+      </div>
+      <div class="diagram-label">Figure 8 — Phase 1 &amp; Phase 2 feature dependency chain</div>
+    </div>
+
+    <h3 class="sub-title">Phase 1</h3>
+    <div class="feature-timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-done"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-done">Week 1 · May 6–10, 2026 · Completed</div>
+          <h4>F-01 — Wallet &amp; Ledger Foundation <span class="badge badge-done">Done</span></h4>
+          <p>Dual wallet model (individual + company), immutable ledger, earning integrations, nav balance widget.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-done"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-done">Week 2 · May 13–17, 2026 · Completed</div>
+          <h4>F-02 — Redemption Catalog <span class="badge badge-done">Done</span></h4>
+          <p>Global catalog (Platform Admin), tenant configuration (Client Admin), regional overrides, currency-aware partner browse with shortfall indicators.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-next"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-next">Week 3–4 · May 20 – May 30, 2026 · In Progress</div>
+          <h4>F-03 — Redemption Flow <span class="badge badge-next">Next</span></h4>
+          <p>End-to-end redemption submission: partner selects catalog item, balance reserved, routed to XTRM or Xoxoday, vendor webhook confirms fulfillment. All 3 processing modes. Default cap of 10 in-flight redemptions per wallet (tenant-configurable).</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-future"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-future">Week 5 · Jun 2–6, 2026</div>
+          <h4>F-04 — Redemption Approval Queue</h4>
+          <p>Client Admin / Approver reviews and approves or rejects APPROVAL_REQUIRED redemptions. Balance remains reserved during the approval window.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-future"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-future">Week 6 · Jun 9–13, 2026</div>
+          <h4>F-05 — Transaction History &amp; Export</h4>
+          <p>Paginated, filterable redemption history for partners and Client Admins. CSV/XLSX export. Uses the ledger entries written by F-01 and F-03.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-future"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-future">Week 7 · Jun 16–20, 2026</div>
+          <h4>F-06 — Non-Cash Returns</h4>
+          <p>Partner submits return request for a non-cash item. Admin approves. Xoxoday confirms. Wallet credited via RETURN_CREDIT ledger entry (already wired in WalletService).</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-future"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-future">Week 8 · Jun 23–27, 2026 · Phase 1 Complete</div>
+          <h4>F-07 — Basic Redemption Analytics</h4>
+          <p>Redemption rate by currency type, unredeemed balance report, date-range filter. Client Admin dashboard.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 class="sub-title" style="margin-top:40px;">Phase 2 <span style="font-size:13px;font-weight:400;color:#6b7280;">— starts after Phase 1 ships</span></h3>
+    <div class="feature-timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-p2"></div>
+          <div class="timeline-connector"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-p2">Week 9 · Jun 30 – Jul 4, 2026</div>
+          <h4>F-08 — Advanced Analytics <span class="badge badge-phase2">Phase 2</span></h4>
+          <p>Tier/region breakdowns, cohort analysis, SLA monitoring. Deeper reporting layer built on top of F-07 base analytics.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-line">
+          <div class="timeline-dot dot-p2"></div>
+          <div class="timeline-connector" style="opacity:0;"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="week-label week-p2">Week 10 · Jul 7–11, 2026 · Phase 2 Complete</div>
+          <h4>F-09 — Balance Expiration <span class="badge badge-phase2">Phase 2</span></h4>
+          <p>Configurable expiry policy per currency, expiration notifications, breakage reporting. Wallet balance auto-expires per tenant settings.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div style="text-align:center;color:#9ca3af;font-size:12px;margin-top:48px;padding-bottom:32px;">
+    Generated from tenxengage-blueprint · roadmaps/redemption-store · 2026-05-20
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: '13px'
+    },
+    flowchart: { curve: 'basis', padding: 20 },
+    er: { diagramPadding: 20 }
+  });
+</script>
+
+</body>
+</html>
