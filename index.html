@@ -378,6 +378,15 @@
       .sidebar { display: none; }
       .main-wrapper { margin-left: 0; margin-top: 48px; }
     }
+    @media print {
+      .top-navbar, .sidebar { display: none !important; }
+      .main-wrapper { margin-left: 0 !important; margin-top: 0 !important; }
+      .container { padding: 20px !important; max-width: 100% !important; }
+      body { font-size: 13px; background: white; }
+      .diagram-wrap, .card, .callout, .blocker-banner { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+      .page-hero h1 { font-size: 24px; }
+    }
   </style>
 </head>
 <body>
@@ -461,15 +470,15 @@
 
     <div class="diagram-wrap">
       <div class="mermaid">
-graph LR
-    Partner(["👤 Partner Earns Rewards"])
-    Wallet(["💰 Wallet Balance\nBuilds Up"])
-    Catalog(["🛍️ Browses Catalog\nSees What They Can Redeem"])
-    Submit(["✅ Submits Redemption"])
+flowchart LR
+    Partner(["Partner Earns Rewards"])
+    Wallet(["Wallet Balance\nBuilds Up"])
+    Catalog(["Browses Catalog\nSees What They Can Redeem"])
+    Submit(["Submits Redemption"])
     Vendor{{"Vendor Routing"}}
-    XTRM(["💵 XTRM\nCash Payout"])
-    Xoxo(["🎁 Xoxoday\nGift Card / Voucher"])
-    Done(["✔ Fulfillment Confirmed\nBalance Finalized"])
+    XTRM(["XTRM\nCash Payout"])
+    Xoxo(["Xoxoday\nGift Card / Voucher"])
+    Done(["Fulfillment Confirmed\nBalance Finalized"])
 
     Partner --> Wallet
     Wallet --> Catalog
@@ -620,25 +629,33 @@ erDiagram
 
     <div class="diagram-wrap">
       <div class="mermaid">
-stateDiagram-v2
-    [*] --> Available : CREDIT\n(earning event)
+flowchart LR
+    E(["Earning Event"]) -->|CREDIT| AV["Available"]
+    AV -->|RESERVE| RS["Reserved"]
+    RS -->|RELEASE| AV
+    RS -->|DEBIT| DB["Debited"]
+    RT(["Return Approved\nF-06"]) -->|RETURN_CREDIT| AV
 
-    Available --> Reserved : RESERVE\n(redemption submitted)\navailableBalance ↓\nreservedBalance ↑
-
-    Reserved --> Debited : DEBIT\n(vendor confirms fulfillment)\nreservedBalance ↓\ntotal wallet value reduced
-
-    Reserved --> Available : RELEASE\n(redemption failed or cancelled)\nreservedBalance ↓\navailableBalance restored ↑
-
-    Available --> Available : RETURN_CREDIT\n(non-cash return approved — F-06)\navailableBalance ↑
-
-    note right of Available
-      Only availableBalance
-      is shown to partners
-      and checked against
-      catalog minimums
-    end note
+    style E fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    style AV fill:#dcfce7,stroke:#22c55e,color:#15803d
+    style RS fill:#fef9c3,stroke:#f59e0b,color:#92400e
+    style DB fill:#f1f5f9,stroke:#94a3b8,color:#475569
+    style RT fill:#f3e8ff,stroke:#a855f7,color:#6b21a8
       </div>
       <div class="diagram-label">Figure 3 — Balance state transitions (all driven by LedgerEntry writes)</div>
+    </div>
+    <div class="card" style="margin-top:0;">
+      <table>
+        <thead><tr><th>Ledger Entry</th><th>availableBalance</th><th>reservedBalance</th><th>Trigger</th></tr></thead>
+        <tbody>
+          <tr><td><code>CREDIT</code></td><td>↑ increases</td><td>—</td><td>Earning event (incentive, training, activity…)</td></tr>
+          <tr><td><code>RESERVE</code></td><td>↓ decreases</td><td>↑ increases</td><td>Redemption submitted</td></tr>
+          <tr><td><code>DEBIT</code></td><td>—</td><td>↓ decreases</td><td>Vendor confirms fulfillment (webhook)</td></tr>
+          <tr><td><code>RELEASE</code></td><td>↑ restored</td><td>↓ decreases</td><td>Redemption failed or cancelled</td></tr>
+          <tr><td><code>RETURN_CREDIT</code></td><td>↑ increases</td><td>—</td><td>Non-cash return approved (F-06)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:13px;color:#64748b;">Only <code>availableBalance</code> is shown to partners and checked against catalog minimums.</p>
     </div>
 
     <h3 class="sub-title">3.3 Earning Integration</h3>
@@ -658,15 +675,15 @@ stateDiagram-v2
       <div class="mermaid">
 flowchart TD
     subgraph Sources["Earning Sources"]
-        I["🏆 Incentive"]
-        T["📚 Training"]
-        A["⚡ Activity"]
-        J["🗺️ Journey"]
-        D["🤝 Deal"]
+        I["Incentive"]
+        T["Training"]
+        A["Activity"]
+        J["Journey"]
+        D["Deal"]
     end
 
     RGS["RewardGrantService\n(modified)"]
-    WS["WalletService.credit()\n• auto-creates wallet if needed\n• idempotency check\n• optimistic lock retry ×3"]
+    WS["WalletService.credit()\n• auto-creates wallet if needed\n• idempotency check\n• optimistic lock retry x3"]
 
     subgraph DB["Database (atomic transaction)"]
         LE["LedgerEntry\n(CREDIT — immutable)"]
@@ -1080,8 +1097,10 @@ flowchart TD
 
     <div class="card">
       <p>
-        F-01 and F-02 are tightly coupled. The catalog browse service calls <code>WalletService.getMyWallets()</code>
-        directly to compute shortfall and currency filtering. Without F-01, F-02's browse has no balance data.
+        The three completed or in-progress features form a layered dependency chain. F-01 provides the wallet and ledger engine. F-02 builds the catalog and browse experience on top of wallet balances. F-03 uses both — pulling effective catalog values at submit time and calling WalletService to reserve, debit, or release the balance.
+      </p>
+      <p>
+        Once F-03's vendor-blocked stories resolve, it will unlock <strong>F-04</strong> (approval queue for <code>APPROVAL_REQUIRED</code> redemptions) and <strong>F-05</strong> (transaction history querying <code>RedemptionRequest</code> records). Both are independent and can be built in parallel.
       </p>
     </div>
 
@@ -1089,30 +1108,36 @@ flowchart TD
       <div class="mermaid">
 flowchart LR
     subgraph F01["F-01 — Wallet Foundation"]
-        RW["RewardWallet\navailableBalance per currency"]
-        WS["WalletService\n.getMyWallets()"]
-        RW --> WS
+        WS["WalletService\nreserve / debit / release / credit"]
     end
 
     subgraph F02["F-02 — Redemption Catalog"]
-        BS["RedemptionCatalogBrowseService\n.browsePartnerCatalog()"]
-        RES["CatalogBrowseItemResponse\n• canAfford\n• shortfallAmount\n• effectiveMinTransactionAmount\n• estimatedPayoutTimeline"]
-        BS --> RES
+        RES["CatalogBrowseService\ncanAfford · effectiveValues"]
     end
 
-    subgraph F03["F-03 — Redemption Flow (in progress)"]
-        RS["RedemptionService\n.submitPersonalRedemption()\n• reserve() via WalletService\n• effectiveValues from catalog"]
+    subgraph F03["F-03 — Redemption Flow"]
+        RS["RedemptionService\nsubmit · route · notify"]
     end
 
-    WS -->|"availableBalance\nper currencyId"| BS
-    RES -->|"partner selects item\ncatalogItemId + walletId"| RS
+    subgraph NEXT["Next (unlocked by F-03)"]
+        F04["F-04\nApproval Queue"]
+        F05["F-05\nTx History"]
+    end
+
+    WS -->|"availableBalance"| RES
+    RES -->|"catalogItemId + effectiveValues"| RS
     WS -->|"reserve / debit / release"| RS
+    RS -->|"PENDING_APPROVAL requests"| F04
+    RS -->|"RedemptionRequest records"| F05
 
-    style F01 fill:#dbeafe,stroke:#6366f1
+    style F01 fill:#dcfce7,stroke:#22c55e
     style F02 fill:#fef9c3,stroke:#f59e0b
-    style F03 fill:#f3e8ff,stroke:#a855f7
+    style F03 fill:#dbeafe,stroke:#3b82f6
+    style NEXT fill:#f8fafc,stroke:#e2e8f0
+    style F04 fill:#f1f5f9,stroke:#94a3b8
+    style F05 fill:#f1f5f9,stroke:#94a3b8
       </div>
-      <div class="diagram-label">Figure 9 — Data flow between F-01, F-02, and F-03</div>
+      <div class="diagram-label">Figure 9 — Data flow across built features and what F-03 unlocks next</div>
     </div>
   </section>
 
@@ -1124,16 +1149,16 @@ flowchart LR
 
     <div class="diagram-wrap">
       <div class="mermaid">
-graph LR
-    F01["F-01\nWallet & Ledger\n✅ Done"]
-    F02["F-02\nRedemption Catalog\n✅ Done"]
-    F03["F-03\nRedemption Flow\n🔄 In Progress\n⚠️ Vendor Blocked"]
+flowchart LR
+    F01["F-01\nWallet & Ledger\n— Done"]
+    F02["F-02\nRedemption Catalog\n— Done"]
+    F03["F-03\nRedemption Flow\n— In Progress\nVendor Blocked"]
     F04["F-04\nApproval Queue"]
     F05["F-05\nTransaction History"]
     F06["F-06\nNon-Cash Returns"]
     F07["F-07\nBasic Analytics"]
-    F08["F-08\nAdvanced Analytics\n📊 Phase 2"]
-    F09["F-09\nBalance Expiration\n📊 Phase 2"]
+    F08["F-08\nAdvanced Analytics\n(Phase 2)"]
+    F09["F-09\nBalance Expiration\n(Phase 2)"]
 
     F01 --> F02
     F01 --> F03
