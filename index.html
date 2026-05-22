@@ -1411,11 +1411,9 @@ flowchart LR
   });
   overlay.addEventListener('click', closeSidebar);
 
-  // Close sidebar when a nav link is clicked on mobile
+  // Close sidebar when a nav link is clicked (safe on desktop — no-op when sidebar is always visible)
   document.querySelectorAll('.sidebar-link').forEach(link => {
-    link.addEventListener('click', () => {
-      if (window.innerWidth <= 900) closeSidebar();
-    });
+    link.addEventListener('click', closeSidebar);
   });
 </script>
 
