@@ -152,6 +152,8 @@
     }
     .badge-done { background: #22c55e; color: white; }
     .badge-next { background: #f59e0b; color: white; }
+    .badge-inprogress { background: #3b82f6; color: white; }
+    .badge-blocked { background: #ef4444; color: white; }
     .badge-phase2 { background: #64748b; color: white; }
     .badge-phase1 { background: #6366f1; color: white; }
 
@@ -393,7 +395,7 @@
     <span class="top-navbar-sep"> / </span>
     <span class="top-navbar-page">Redemption Store</span>
   </div>
-  <div class="top-navbar-right">Last updated: 2026-05-20</div>
+  <div class="top-navbar-right">Last updated: 2026-05-22</div>
 </div>
 
 <nav class="sidebar">
@@ -403,8 +405,10 @@
   <div class="sidebar-group">Features (Done)</div>
   <a href="#f01" class="sidebar-link">F-01 — Wallet &amp; Ledger</a>
   <a href="#f02" class="sidebar-link">F-02 — Redemption Catalog</a>
+  <div class="sidebar-group">In Progress</div>
+  <a href="#f03" class="sidebar-link">F-03 — Redemption Flow</a>
   <div class="sidebar-group">Integration</div>
-  <a href="#connection" class="sidebar-link">How F-01 &amp; F-02 Connect</a>
+  <a href="#connection" class="sidebar-link">How Features Connect</a>
   <div class="sidebar-group">Roadmap</div>
   <a href="#roadmap" class="sidebar-link">Phase 1 &amp; Phase 2</a>
 </nav>
@@ -427,7 +431,8 @@
     <div class="header-badges">
       <span class="badge badge-done">F-01 Done</span>
       <span class="badge badge-done">F-02 Done</span>
-      <span class="badge badge-next">F-03 Next</span>
+      <span class="badge badge-inprogress">F-03 In Progress</span>
+      <span class="badge badge-blocked">Vendor Blocked</span>
       <span class="badge badge-phase1">Phase 1 · 7 Features</span>
       <span class="badge badge-phase2">Phase 2 · 2 Features</span>
     </div>
@@ -948,9 +953,130 @@ flowchart TD
 
   <div class="divider"></div>
 
-  <!-- SECTION 5: CONNECTION -->
+  <!-- SECTION 5: F-03 -->
+  <section id="f03">
+    <h2 class="section-title">5. F-03 — Redemption Flow <span class="badge badge-inprogress" style="font-size:11px;vertical-align:middle;">In Progress</span> <span class="badge badge-blocked" style="font-size:11px;vertical-align:middle;">Vendor Blocked</span></h2>
+
+    <div class="callout callout-blue">
+      <strong>What this delivers:</strong> End-to-end redemption submission — partner selects a catalog item, wallet balance is reserved atomically, request is routed to XTRM (cash) or Xoxoday (non-cash), vendor webhook confirms fulfillment and finalises the ledger. All 3 processing modes supported. Default cap of 10 in-flight redemptions per partner (configurable per tenant).
+    </div>
+
+    <div class="callout callout-amber">
+      <strong>Vendor blockers (as of 2026-05-22):</strong> XTRM profile setup is incomplete — TransferFund API not working (Vijay notified). Xoxoday API credentials not yet provided (Vijay notified). Stories US-05 (XTRM routing), US-06 (Xoxoday routing), US-07 (webhook processing), and US-03 (batch processor) are parked until both are resolved.
+    </div>
+
+    <h3 class="sub-title">5.1 Story Progress</h3>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Story</th><th>Title</th><th>BE</th><th>FE</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>US-01</code></td>
+            <td>Submit personal wallet redemption</td>
+            <td><span class="badge badge-done" style="font-size:10px;">Done</span></td>
+            <td><span class="badge badge-done" style="font-size:10px;">Done</span></td>
+            <td>Balance reservation, in-flight cap, Kafka event</td>
+          </tr>
+          <tr>
+            <td><code>US-02</code></td>
+            <td>Submit company wallet redemption</td>
+            <td><span class="badge badge-done" style="font-size:10px;">Done</span></td>
+            <td><span class="badge badge-done" style="font-size:10px;">Done</span></td>
+            <td>PARTNER_ADMIN only, company wallet</td>
+          </tr>
+          <tr>
+            <td><code>US-04</code></td>
+            <td>Partner redemption notifications</td>
+            <td><span class="badge badge-done" style="font-size:10px;">Done</span></td>
+            <td>N/A</td>
+            <td>Kafka consumer dispatches partner notifications</td>
+          </tr>
+          <tr>
+            <td><code>US-03</code></td>
+            <td>Batch redemption processor</td>
+            <td><span class="badge badge-blocked" style="font-size:10px;">Blocked</span></td>
+            <td>N/A</td>
+            <td>Needs US-05 + US-06 (vendor routing)</td>
+          </tr>
+          <tr>
+            <td><code>US-05</code></td>
+            <td>Route cash redemptions to XTRM</td>
+            <td><span class="badge badge-blocked" style="font-size:10px;">Blocked</span></td>
+            <td>N/A</td>
+            <td>XTRM profile setup incomplete</td>
+          </tr>
+          <tr>
+            <td><code>US-06</code></td>
+            <td>Route non-cash redemptions to Xoxoday</td>
+            <td><span class="badge badge-blocked" style="font-size:10px;">Blocked</span></td>
+            <td>N/A</td>
+            <td>Xoxoday API credentials unavailable</td>
+          </tr>
+          <tr>
+            <td><code>US-07</code></td>
+            <td>Process vendor webhooks idempotently</td>
+            <td><span class="badge badge-blocked" style="font-size:10px;">Blocked</span></td>
+            <td>N/A</td>
+            <td>Needs US-05 + US-06 (webhook payload shapes)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">5.2 Redemption State Machine</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    S(("Start")) -->|INSTANT or BATCH| RS
+    S -->|APPROVAL_REQUIRED| PA
+
+    PA["PENDING_APPROVAL"] -->|"Admin approves  (F-04)"| RS
+    PA -->|"Admin rejects"| FL
+
+    RS["RESERVED"] -->|"Vendor dispatch  (US-05 / US-06 / US-03)"| PR
+    RS -->|"Admin cancel"| CN
+
+    PR["PROCESSING"] -->|"Webhook success  (US-07)\nDEBIT ledger entry"| CM
+    PR -->|"Webhook failure  (US-07)\nRELEASE ledger entry"| FL
+
+    CM["COMPLETED"]
+    FL["FAILED"]
+    CN["CANCELLED"]
+
+    style S fill:#0f172a,stroke:#0f172a,color:white,rx:50
+    style PA fill:#fef9c3,stroke:#f59e0b,color:#92400e
+    style RS fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    style PR fill:#f3e8ff,stroke:#a855f7,color:#6b21a8
+    style CM fill:#dcfce7,stroke:#22c55e,color:#15803d
+    style FL fill:#fee2e2,stroke:#ef4444,color:#991b1b
+    style CN fill:#f1f5f9,stroke:#94a3b8,color:#475569
+      </div>
+      <div class="diagram-label">Figure 8 — Redemption request state machine · In-flight cap: max 10 per partner (configurable via <code>maxInFlightRedemptions</code>)</div>
+    </div>
+
+    <h3 class="sub-title">5.3 Key Business Rules</h3>
+    <div class="card">
+      <table>
+        <thead><tr><th>Rule</th><th>What Happens</th></tr></thead>
+        <tbody>
+          <tr><td>Balance reservation is atomic</td><td>RESERVE ledger entry + RedemptionRequest row written in one transaction. Either both commit or both roll back.</td></tr>
+          <tr><td>In-flight cap</td><td>Default 10 RESERVED requests per partner per wallet. 11th submission → 409. Configurable via <code>maxInFlightRedemptions</code> on TenantRedemptionSettings.</td></tr>
+          <tr><td>Amount below minimum rejected</td><td>Effective <code>minTransactionAmount</code> (from F-02 catalog config) checked at submit time → 422</td></tr>
+          <tr><td>Vendor name never exposed</td><td>XTRM / Xoxoday routing is invisible to partners. Only <code>category=CASH</code> vs <code>NON_CASH</code> shown.</td></tr>
+          <tr><td>Kafka event published after commit</td><td><code>REDEMPTION_REQUESTED</code> event published via <code>@TransactionalEventListener(AFTER_COMMIT)</code> — never fires if DB transaction rolls back</td></tr>
+          <tr><td>Webhook idempotency (US-07)</td><td>Duplicate vendor webhook delivery → 200 returned immediately; second ledger write prevented via <code>idempotency_key</code> check</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 6: CONNECTION -->
   <section id="connection">
-    <h2 class="section-title">5. How F-01 &amp; F-02 Connect</h2>
+    <h2 class="section-title">6. How Features Connect</h2>
 
     <div class="card">
       <p>
@@ -974,7 +1100,7 @@ flowchart LR
         BS --> RES
     end
 
-    subgraph F03["F-03 — Redemption Flow (next)"]
+    subgraph F03["F-03 — Redemption Flow (in progress)"]
         RS["RedemptionService\n.submitPersonalRedemption()\n• reserve() via WalletService\n• effectiveValues from catalog"]
     end
 
@@ -986,22 +1112,22 @@ flowchart LR
     style F02 fill:#fef9c3,stroke:#f59e0b
     style F03 fill:#f3e8ff,stroke:#a855f7
       </div>
-      <div class="diagram-label">Figure 7 — Data flow between F-01, F-02, and upcoming F-03</div>
+      <div class="diagram-label">Figure 9 — Data flow between F-01, F-02, and F-03</div>
     </div>
   </section>
 
   <div class="divider"></div>
 
-  <!-- SECTION 6: ROADMAP -->
+  <!-- SECTION 7: ROADMAP -->
   <section id="roadmap">
-    <h2 class="section-title">6. Roadmap — Phase 1 &amp; Phase 2</h2>
+    <h2 class="section-title">7. Roadmap — Phase 1 &amp; Phase 2</h2>
 
     <div class="diagram-wrap">
       <div class="mermaid">
 graph LR
     F01["F-01\nWallet & Ledger\n✅ Done"]
     F02["F-02\nRedemption Catalog\n✅ Done"]
-    F03["F-03\nRedemption Flow\n⏳ Next"]
+    F03["F-03\nRedemption Flow\n🔄 In Progress\n⚠️ Vendor Blocked"]
     F04["F-04\nApproval Queue"]
     F05["F-05\nTransaction History"]
     F06["F-06\nNon-Cash Returns"]
@@ -1020,11 +1146,10 @@ graph LR
     F05 --> F07
     F07 --> F08
     F01 --> F09
-    F03 --> F09
 
     style F01 fill:#dcfce7,stroke:#22c55e
     style F02 fill:#dcfce7,stroke:#22c55e
-    style F03 fill:#fef9c3,stroke:#f59e0b
+    style F03 fill:#dbeafe,stroke:#3b82f6
     style F04 fill:#f1f5f9,stroke:#94a3b8
     style F05 fill:#f1f5f9,stroke:#94a3b8
     style F06 fill:#f1f5f9,stroke:#94a3b8
@@ -1064,13 +1189,13 @@ graph LR
 
       <div class="timeline-item">
         <div class="timeline-line">
-          <div class="timeline-dot dot-next"></div>
+          <div class="timeline-dot" style="background:#3b82f6;border-color:#3b82f6;"></div>
           <div class="timeline-connector"></div>
         </div>
         <div class="timeline-content">
-          <div class="week-label week-next">Week 3–4 · May 20 – May 30, 2026 · In Progress</div>
-          <h4>F-03 — Redemption Flow <span class="badge badge-next">Next</span></h4>
-          <p>End-to-end redemption submission: partner selects catalog item, balance reserved, routed to XTRM or Xoxoday, vendor webhook confirms fulfillment. All 3 processing modes. Default cap of 10 in-flight redemptions per wallet (tenant-configurable).</p>
+          <div class="week-label" style="color:#1d4ed8;">Week 3–4 · May 20 – May 30, 2026 · In Progress</div>
+          <h4>F-03 — Redemption Flow <span class="badge badge-inprogress">In Progress</span> <span class="badge badge-blocked">Vendor Blocked</span></h4>
+          <p>Submission + balance reservation done (US-01, US-02 BE+FE ✅). Partner notifications done (US-04 BE ✅). <strong>Blocked:</strong> XTRM profile setup incomplete + Xoxoday credentials unavailable — vendor routing (US-05, US-06), webhook processing (US-07), and batch processor (US-03) parked until resolved.</p>
         </div>
       </div>
 
@@ -1155,7 +1280,7 @@ graph LR
   </section>
 
   <div style="text-align:center;color:#9ca3af;font-size:12px;margin-top:48px;padding-bottom:32px;">
-    Generated from tenxengage-blueprint · roadmaps/redemption-store · 2026-05-20
+    Generated from tenxengage-blueprint · roadmaps/redemption-store · 2026-05-22
   </div>
 
 </div>
